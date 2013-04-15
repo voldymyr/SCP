@@ -1,6 +1,7 @@
-MOMRST
+SCP
 ======
 
-Multiple Objects Multiple Resources Synchronization Technique
+Synchronization Control Protocol
 
-Synchronization technique and a pattern to use it.
+SCP is a protocol that can be used on multicore CPU's to synchroniza threads/tasks. It is available for Linux,
+VxWorks and Windows. 
