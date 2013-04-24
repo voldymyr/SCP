@@ -1,0 +1,10 @@
+This library can be installed using aptitude: apt-get install scp
+
+Alternatively it can be compiled manually, using the source code and Makefile provided
+
+1. run: "make" to compile
+2. run: 
+    ln -sf libConcurrent.so.1.0 libConcurrent.so
+    ln -sf libConcurrent.so.1.0 libConcurrent.so.1
+The above will create symbolic links for compiler and run time binding
+
