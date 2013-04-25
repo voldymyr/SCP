@@ -3,7 +3,7 @@ SCP
 
 Synchronization Control Protocol
 
-SCP is a synchronization protocol that is designed for multicore CPU's to synchronize threads/tasks. It is available
+SCP is a synchronization protocol that is designed to synchronize threads/tasks or multi/core processors. It works for single core processors as well. It is available
 for Linux, VxWorks and Windows. 
 
 SCP is a protocol that contains special synchronization algorithm for synchronization of threads/tasks
