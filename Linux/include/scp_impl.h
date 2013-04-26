@@ -55,7 +55,7 @@ public:
 	/*
 	 * deinitialise on exiting
 	 */
-    int deinit();			
+    int deinit();
 
 	/*
 	 * mark resources prior to using them (only those one wants to access)
@@ -65,23 +65,23 @@ public:
 	/*
 	 * unmark resources if they are not going to be used in near future
 	 */
-    int unmark_resource(int res_id);			
+    int unmark_resource(int res_id);
 
 	/*
 	 * object can register its resource or global resource
 	 */
     int register_resource( int res_id, std::map<int, int> );
-	
+
 	/*
 	 * if object provides a resource, it should unregister it before exiting
 	 */
     int unregister_resource(int res_id );
-	
+
 	/*
 	 * acquires all marked resources
 	 */
     int acquire_resources();
-	
+
 	/*
 	 * releases all marked resources
 	 */
@@ -97,77 +97,77 @@ private:
 	 * finds minimum access count
 	 */
     int find_min( std::map<int, int>& inmap );
-	
+
 	/*
 	 * finds maximum missedwakeups count
 	 */
-    int find_max( std::map<int, int>& inmap );	
+    int find_max( std::map<int, int>& inmap );
     
-	
+
 	/*
 	 * global mutex, used to protect all shared resources
 	 */
-    pthread_mutex_t& mrh_mutex;	
-	
+    pthread_mutex_t& mrh_mutex;
+
 	/*
 	 * reference to global event table; one event for each object
 	 * (key: objectID; value: binary semaphore)
 	 */
     std::map<int, sem_t>& mr_event_table;
-	
+
 	/* 
 	 * reference to global access table;(key: objectID; 
 	 * value: vector of resource IDs that object accesses)
 	 */
     std::map<int, std::vector<int> >& mr_access_table;
-	
+
 	/*
 	 * reference to global tables of users. contains tables
 	 * of users; each table contains: (id: resourceID;
 	 * key: ObjectID; value: accessType)
 	 */ 
-    std::map<int, std::map<int, int> >& mr_tables_of_users;	
-	
+    std::map<int, std::map<int, int> >& mr_tables_of_users;
+
 	/* 
 	 * reference to global count table; number of accesses to different
 	 * shared resources by each object (key: objectID; value: count)
 	 */
-    std::map<int, int>& mr_count_table;	
-	
+    std::map<int, int>& mr_count_table;
+
 	/*
 	 * reference to global table of flags; one flag for each resource;
 	 * flag can be either BUSY or FREE
 	 */
-    std::map<int, int>& mr_table_of_flags;	
-	
+    std::map<int, int>& mr_table_of_flags;
+
 	/*
 	 * counts missed wake ups (key: object id; value: count variable)
 	 */
     std::map<int, int>& mr_missed_wakeups;
-	
+
 	/*
 	 * shows if resource is marked by some objects, and by how many
 	 * (key: resource id; value: number of objects that marked resource)
 	 */
     std::map<int, int>& mr_resource_state;
-	
+
 	/*
 	 * iterator for mr_tables_of_users
 	 */
     std::map<int, std::map<int, int> >::iterator m_it_tu;
-	
+
     std::map<int, int>::iterator m_it;
 
 	/*
 	 * state of object when it is not interested in any resource
 	 */
     static const int PASSIVE = 0;
-	
+
 	/*
 	 * state of object when it is currently accessing shared resources
 	 */
-    static const int ACCESSING = 1;	
-	
+    static const int ACCESSING = 1;
+
 	/* 
 	 * state of object when it is interested in the resources,
 	 * but they are taken
@@ -179,7 +179,7 @@ private:
 	 * first one who asks for it
 	 */
     static const int FREE = 3;
-	
+
 	/* 
 	 * state of resource when it is being accessed by some object
 	 */
