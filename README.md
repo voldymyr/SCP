@@ -4,12 +4,13 @@ SCP
 Synchronization Control Protocol
 
 SCP is a synchronization protocol that is designed to synchronize threads/tasks on multi/core processors.
-It works for single core processors as well. It is available for Linux, VxWorks and Windows. 
+It works for single core processors, with multithreading support, as well. It is available for Linux, VxWorks
+and Windows. Linux version is being a mainstream version and most development work in concentrated on it.
 
 SCP is a protocol that contains special synchronization algorithm for synchronization of threads/tasks
 in complex situations. SCP is mainly designed to be used on multi-core CPUs, thats where the most performance
 can be achieved. SCP can also run on single core CPUs with multithreading. SCP is written in C++, and represents
-a class named Concurrent, which contains all synchronization functionality. SCP protocol can be used in any C++
+a class named "Concurrent", which contains all synchronization functionalities. SCP protocol can be used in any C++
 environment. Synchronization protocol is capable of synchronizing any number of threads/tasks that access any amount
 of shared resources at once. This is a unique feature of the protocol. SCP provides convenient API functionality for
 dealing with synchronization without having to know much about synchronization itself. With SCP, synchronization is
