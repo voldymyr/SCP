@@ -39,12 +39,12 @@ public:
 	 * Constructor that receives parameters defined globally
 	 */
     SCP_oncurrent( pthread_mutex_t& hmutex, std::map<int, sem_t>& event_table,\
-	std::map<int, std::vector<int> >& access_table,\ 
+	std::map<int, std::vector<int> >& access_table,\
 	std::map<int, std::map<int, int> >& tables_of_users,\
 	std::map<int, int>& count_table, std::map<int, int>& table_of_flags,\
 	std::map<int, int>& missed_wakeups, std::map<int, int>& resource_state,\
 	int id );
-    
+
     ~SCP_concurrent (void );
 
 	/*
@@ -102,7 +102,7 @@ private:
 	 * finds maximum missedwakeups count
 	 */
     int find_max( std::map<int, int>& inmap );
-    
+
 
 	/*
 	 * global mutex, used to protect all shared resources
@@ -115,8 +115,8 @@ private:
 	 */
     std::map<int, sem_t>& mr_event_table;
 
-	/* 
-	 * reference to global access table;(key: objectID; 
+	/*
+	 * reference to global access table;(key: objectID;
 	 * value: vector of resource IDs that object accesses)
 	 */
     std::map<int, std::vector<int> >& mr_access_table;
@@ -125,10 +125,10 @@ private:
 	 * reference to global tables of users. contains tables
 	 * of users; each table contains: (id: resourceID;
 	 * key: ObjectID; value: accessType)
-	 */ 
+	 */
     std::map<int, std::map<int, int> >& mr_tables_of_users;
 
-	/* 
+	/*
 	 * reference to global count table; number of accesses to different
 	 * shared resources by each object (key: objectID; value: count)
 	 */
@@ -175,12 +175,12 @@ private:
     static const int WAITING = 2;
 
 	/*
-	 * state of resource when it is free and can be taken by the 
+	 * state of resource when it is free and can be taken by the
 	 * first one who asks for it
 	 */
     static const int FREE = 3;
 
-	/* 
+	/*
 	 * state of resource when it is being accessed by some object
 	 */
     static const int BUSY = 4;
