@@ -42,7 +42,7 @@ SCP_concurrent::~SCP_concurrent( void )
 }
 
 /****************************** INITIALIZATION *******************************/
-int Concurrent::init( bool bcount = false )
+int SCP_concurrent::init( bool bcount = false )
 {
 	/* lock global mutex */
 	int result = pthread_mutex_lock( &mrh_mutex );
@@ -240,7 +240,7 @@ int SCP_concurrent::mark_resource( int res_id )
 
 
 /*************************** UNMARK RESOURCES ********************************/
-int SCP_oncurrent::unmark_resource( int res_id )
+int SCP_concurrent::unmark_resource( int res_id )
 {
 	/* check for negative numbers (only positive integers are allowed) */
 	if( res_id < 0 )
