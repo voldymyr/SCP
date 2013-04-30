@@ -22,9 +22,9 @@
  *
  *****************************************************************************/
 
-#include "scp_impl.h"
+#include "../include/scp_impl.h"
 
-Concurrent::Concurrent( pthread_mutex_t& hmutex, std::map<int, sem_t>&\
+SCP_concurrent::SCP_concurrent( pthread_mutex_t& hmutex, std::map<int, sem_t>&\
  event_table, std::map<int, std::vector<int> >& access_table,\
     std::map<int, std::map<int, int> >& tables_of_users, std::map<int, int>&\
 	count_table, std::map<int, int>& table_of_flags, std::map<int, int>&\
@@ -37,7 +37,7 @@ Concurrent::Concurrent( pthread_mutex_t& hmutex, std::map<int, sem_t>&\
 {
 }
 
-Concurrent::~Concurrent( void )
+SCP_concurrent::~SCP_concurrent( void )
 {
 }
 
@@ -114,7 +114,7 @@ int Concurrent::init( bool bcount = false )
 
 
 /******************************** DEINITIALIZATION ***************************/
-int Concurrent::deinit()
+int SCP_concurrent::deinit()
 {
 	/* lock global mutex */
 	int result = pthread_mutex_lock( &mrh_mutex );
@@ -165,10 +165,10 @@ int Concurrent::deinit()
 
 
 /***************************** MARK RESOURCES ********************************/
-int Concurrent::mark_resource( int res_id )
+int SCP_concurrent::mark_resource( int res_id )
 {
 	/*  check for negative numbers (only positive integers are allowed) */
-	if( res_id < 0 ) 
+	if( res_id < 0 )
 		return -6;
 	/* lock global mutex */
 	int result = pthread_mutex_lock( &mrh_mutex );
@@ -180,7 +180,7 @@ int Concurrent::mark_resource( int res_id )
 		m_it_tu = mr_tables_of_users.find(res_id);
 		/* set true if such resource exists */
 		if ((*m_it_tu).first >= 0)
-			bExists = true;			
+			bExists = true;
 
 		if( bExists )
 		{
@@ -189,7 +189,7 @@ int Concurrent::mark_resource( int res_id )
 			/* initially object is PASSIVE to the resource */
 			mr_tables_of_users[ res_id ][ mn_id ] = PASSIVE;
 			/* increase usage counter for this resource */
-			mr_resource_state[ res_id ] ++; 
+			mr_resource_state[ res_id ] ++;
 			/* release global mutex */
 			ret = pthread_mutex_unlock( &mrh_mutex );
 			switch(ret)
@@ -202,7 +202,7 @@ int Concurrent::mark_resource( int res_id )
 			default:
 				/* other mutex problem */
 				return -1;
-			}	
+			}
 		}
 		else
 		{
@@ -220,9 +220,9 @@ int Concurrent::mark_resource( int res_id )
 				return -1;
 			}
 			/* specified resource does not exist */
-			return -7;			
+			return -7;
 		}
-		
+
 		break;
 	case EINVAL:
 		/* mutex has not been properly initialized */
@@ -240,7 +240,7 @@ int Concurrent::mark_resource( int res_id )
 
 
 /*************************** UNMARK RESOURCES ********************************/
-int Concurrent::unmark_resource( int res_id )
+int SCP_oncurrent::unmark_resource( int res_id )
 {
 	/* check for negative numbers (only positive integers are allowed) */
 	if( res_id < 0 )
@@ -317,7 +317,7 @@ int Concurrent::unmark_resource( int res_id )
 
 
 /*********************************** REGISTER RESOURCE ***********************/
-int Concurrent::register_resource( int res_id, std::map<int, int>\
+int SCP_concurrent::register_resource( int res_id, std::map<int, int>\
  table_of_users )
 {
 	/* check for negative numbers (only positive integers are allowed) */
@@ -387,7 +387,7 @@ int Concurrent::register_resource( int res_id, std::map<int, int>\
 
 
 /****************************** UNREGISTER RESOURCE **************************/
-int Concurrent::unregister_resource( int res_id )
+int SCP_concurrent::unregister_resource( int res_id )
 {
 	/* check for negative numbers (only positive integers are allowed) */
 	if( res_id < 0 )
@@ -480,7 +480,7 @@ int Concurrent::unregister_resource( int res_id )
 
 
 /******************************** ACQUIRE RESOURCES **************************/
-int Concurrent::acquire_resources()
+int SCP_concurrent::acquire_resources()
 {
 	/* Lock gobal mutex */
 	int result = pthread_mutex_lock( &mrh_mutex );
@@ -504,7 +504,7 @@ int Concurrent::acquire_resources()
 		/* find object who starved the most */
 		starvingOID = find_max( mr_missed_wakeups );
 
-		for (unsigned int i = 0; i < mr_access_table[ mn_id ].size(); i++)				
+		for (unsigned int i = 0; i < mr_access_table[ mn_id ].size(); i++)
 		{
 			/* check if starving object is waiting for any of resource that
 			 * we are going to access */
@@ -515,7 +515,7 @@ int Concurrent::acquire_resources()
 				 * one resource */
 				bFlag = true;
 				break;
-			} 
+			}
 		}
 		/* if he is waiting, then ... */
 		if (bFlag)
@@ -536,7 +536,7 @@ int Concurrent::acquire_resources()
 						/* mark flag if at least one of wanted resources
 						 * is busy */
 						bFlag = true;
-						break; 
+						break;
 					}
 				}
 			}
@@ -551,7 +551,7 @@ int Concurrent::acquire_resources()
 				{
 					/* mark flag if at least one of wanted resources is busy */
 					bFlag = true;
-					break; 
+					break;
 				}
 			}
 		}
@@ -615,7 +615,7 @@ int Concurrent::acquire_resources()
 			/* if wanted resources are not free, we have to sleep until they
 			 * become FREE ... */
 			/* singal that we are in state 2 */
-			nSetResetState = 2; 
+			nSetResetState = 2;
 			/* iterate through all your (the ones you want to access)
 			 * resource IDs */
 			for (unsigned int i = 0; i < mr_access_table[ mn_id ].size(); i++)
@@ -665,14 +665,14 @@ int Concurrent::acquire_resources()
 			semtake_ret = sem_wait( &( mr_event_table[ mn_id ] ) );
 			/* mark flag, it will be checked if sem_wait() before failed,
 			 * otherwise it won't matter */
-			bPassOK = false; 
+			bPassOK = false;
 			break;
 		}
 		/* check return value from one of the sem_wait() before */
 		switch (semtake_ret)
 		{
 		case 0:
-			break;   
+			break;
 		default:
 			/* if we failed on the first sem_wait(), execution will still
 			 * be correct */
@@ -692,7 +692,7 @@ int Concurrent::acquire_resources()
 		break;
 	case EINVAL:
 		/* mutex has not been properly initialized */
-		return -2;	
+		return -2;
 	case EDEADLK:
 		/* mutex is already owned by the calling thread */
 		return -4;
@@ -700,14 +700,14 @@ int Concurrent::acquire_resources()
 		/* something is wrong with the semaphore */
 		return -1;
 	}
-	
+
 	return 1;		/* return SUCCESS */
 }
 /*****************************************************************************/
 
 
 /******************************* RELINQUISH RESOURCES ************************/
-int Concurrent::release_resources()
+int SCP_concurrent::release_resources()
 {
 	/* Lock global mutex */
 	int result = pthread_mutex_lock( &mrh_mutex );
@@ -812,7 +812,7 @@ int Concurrent::release_resources()
 						/* increment objects missed wake up count as some of
 						 * his resources are BUSY */
 						mr_missed_wakeups[ oIdToWakeUp ] ++;
-						break;			
+						break;
 					}
 				}
 				/* if all relevant resource flags are FREE, then ...  */
@@ -830,7 +830,7 @@ int Concurrent::release_resources()
 						/* mark oIdToWakeUp's status in his user tables as
 						 * ACCESSING */
 						mr_tables_of_users[ mr_access_table[ oIdToWakeUp ]\
-						[ p ] ][ oIdToWakeUp ] = ACCESSING;	
+						[ p ] ][ oIdToWakeUp ] = ACCESSING;
 					}
 					/* unlock mutex */
 					int ret = sem_post( &( mr_event_table[ oIdToWakeUp ] ) );
@@ -918,7 +918,7 @@ int Concurrent::release_resources()
 
 
 /************************** FINDS MINIMUM VALUE FROM MAP<INT, INT> ***********/
-int Concurrent::find_min( std::map<int, int>& inmap )
+int SCP_concurrent::find_min( std::map<int, int>& inmap )
 {
 	/* set map iterator to the beginning of the map */
 	m_it = inmap.begin();
@@ -943,7 +943,7 @@ int Concurrent::find_min( std::map<int, int>& inmap )
 
 
 /************************** FINDS MAXIMUM VALUE FROM MAP<INT, INT> ***********/
-int Concurrent::find_max( std::map<int, int>& inmap )
+int SCP_concurrent::find_max( std::map<int, int>& inmap )
 {
   	m_it = inmap.begin();
 	int maxObj = (*m_it).first;
