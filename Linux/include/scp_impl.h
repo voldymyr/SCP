@@ -38,7 +38,7 @@ public:
 	/*
 	 * Constructor that receives parameters defined globally
 	 */
-    SCP_oncurrent( pthread_mutex_t& hmutex, std::map<int, sem_t>& event_table,\
+    SCP_concurrent( pthread_mutex_t& hmutex, std::map<int, sem_t>& event_table,\
 	std::map<int, std::vector<int> >& access_table,\
 	std::map<int, std::map<int, int> >& tables_of_users,\
 	std::map<int, int>& count_table, std::map<int, int>& table_of_flags,\
