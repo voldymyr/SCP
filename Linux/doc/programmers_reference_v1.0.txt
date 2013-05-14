@@ -1,4 +1,3 @@
-
 				Synchronization Control Protocol v1.0
 
 
@@ -326,7 +325,7 @@ EXAMPLE CODE:
 		...
 		std::map<int, int> table_of_users_1;	// table of users for global shared resource
 
-		Instance->register_resource( 5, table_of_users_1 );	// assign id 5 to shared \											   resource
+		Instance->register_resource( 5, table_of_users_1 );	// assign id 5 to shared resource
 
 	GLOBAL RESOURCE REGISTRATION CASE 2:
 
@@ -338,9 +337,11 @@ EXAMPLE CODE:
 
 		mr_tables_of_users[ 6 ] = table_of_users_2;	// assign id 6 to this resource
 
-		mr_table_of_flags[ 6 ] = 3;	// make this resource FREE, i.e. assign 3 to its ID (it is 							   default)
+		mr_table_of_flags[ 6 ] = 3;	// make this resource FREE, i.e. assign 3 to its ID
+		(it is default)
 		
-		// FREE is an in class identifier, therefor it can not be used externally, but as it \				   corresponds to integer 3, then integer 3 can be used instead.
+		// FREE is an in class identifier, therefor it can not be used externally, but as it \	
+			corresponds to integer 3, then integer 3 can be used instead.
 
 		pthread_mutex_unlock( &g_mutex );		// relinquish global mutex
 		
@@ -395,8 +396,8 @@ EXAMPLE CODE:
 		pthread_mutex_lock( &g_mutex );
 
 		mr_tables_of_users[ 6 ].clear();				// clear table of users
-		mr_tables_of_users.erase( mr_tables_of_users.find( 6 ) );	// erase table of users from 											   map
-		mr_table_of_flags.erase( mr_table_of_flags.find( 6 ) );	// erase resource from table of 										   flags
+		mr_tables_of_users.erase( mr_tables_of_users.find( 6 ) );	// erase table of users from map
+		mr_table_of_flags.erase( mr_table_of_flags.find( 6 ) );	// erase resource from table of flags
 
 		pthread_mutex_unlock( &g_mutex );
 
