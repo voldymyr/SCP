@@ -1,0 +1,454 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Synchronization Control
+Protocol v1.0
+
+
+
+Programmers reference v1.0
+for Linux
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***************** GLOBAL DECLARATIONS ********************
+
+	There are 8 global variables that are important for concurrent execution with Synchronization Control Protocol (SCP). They all must be defined before concurrent execution starts. These variables contain information about objects and resources, which is needed by SCP.
+
+
+pthread_mutex_t g_mutex;		Global mutex used for synchronization. Should be initialized and passed to Concurrent's constructor.
+std::map<int, sem_t> g_event_table;	Global event table containing ObjectIDs as keys and binary semaphores as values. It is internally used for synchronization. It will be automatically initialized when init() function is called. It should be passed to Concurrent's constructor. This variable is initially empty.
+std::map<int, std::vector<int> > g_access_table;	Global access table containing objectIDs as keys and vector of resource IDs that object accesses as values. This map can be initialized by calling mark_resource() function and deinitialized by calling unmark_resources(). This map is initially empty.
+std::map<int, std::map<int, int> > g_tables_of_users;	Global map containing tables of users. It contains resourceIDs as keys and as values it contains a map which has ObjectIDs as keys and accessType as values. Access type can be one of the three object states decalred in Concurrent class. If object provides its own member or members as shared resources, it must first register them by calling register_resource() function. Otherwise, if shared resources are global, this structure should be initialized manually. Note that
+before manual initialization global semaphore must be acquired!!!
+std::map<int, int> g_count_table;	Global count table contains ObjectIDs as keys and count variables as values. This table contains number of accesses to different shared resources by each
+object. This map will be initialized by calling init() function. Initialization wil be dependent on the parameter to init() function.
+std::map<int, int> g_table_of_flags;		Global table of flags containing resourceIDs as keys and flags as values. Flag can be one of two values declared in Concurrent class: FREE and BUSY. Flags signal current state of resource.This map is empty initially. It will be initialized by calling init() function.
+std::map<int, int> g_missed_wakeups;	Global map containing number of missed wake ups for each object. It contains objectIDs as keys and integer variable as value, which signals the number of
+missed wake ups. This variable is empty initially. It will be initialized by calling init() function.
+std::map<int, int> g_resource_state;		Shows if resource is marked by some objects, and by how many (key: resource id; value: number of objects that marked resource). This map is used internally for
+synchronization purposes.
+
+
+
+SUMMARY
+	To summarize general knowledge about global shared tables (maps) it is important to remind that all variables should be created before execution starts and passed empty to the constructors of objects derived from Concurrent class. Names of all global maps can be defined by users, they do not necessarily need to be named as described above. The most important thing is that they must be passed to constructor of objects derived from Concurrent class.
+
+**************************************************
+
+
+					PUBLIC INTERFACE
+	
+********************** INIT ***********************
+	int init( bool bcount = false );
+
+DESCRIPTION:
+
+	This function initializes some global structures, such as creates binary semaphore for object that 	calls it, for instance. Function takes one boolean parameter: bcount. It will indicate whether 	object cals init() before concurrent execution, or at a run time. Initialization of global structures 	is done through references to global maps that reside in Concurrent class. init() must be called 	for every object before it starts concurrent execution, i.e. starts accessing shared resources. If 	new object comes at runtime, it can safely call init() and start its work. Function should be 	called only once for each object.
+	
+PARAMETERS:
+	
+	bool bcount - boolean variable initialized to false by default. It means object is created before 	concurrent execution has started, on the beginning. If object comes at runtime, it must call 	init( true ) and set parameter to true, in order to align it with other objects. Ignoring this might 	cause starvation problems.
+	
+PRECONDITION:
+•	If called at run time: “true” should be passed as a parameter;
+•	If called at the beginning, when concurrent execution has not been started (default), nothing should be passed, or “false” - which is by default;
+
+RETURN VALUES:
+
+	 1 – SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 – ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-3 – ERROR:		binary semaphore initialization error
+
+	-4 – ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+EXAMPLE CODE:
+
+	SomeClass *Instance = new SomeClass( g_mutex, g_event_table, g_access_table,\ 								 g_tables_of_users, g_count_table, g_table_of_flags,\ 							 g_missed_wakeups, g_resource_state, 1 );
+						
+	// if object has just been created, call init() without setting parameter; default setting is set\
+	   to false already
+	
+	Instance->init();
+	...
+	//call other methods you need, for instance to mark resource
+	...
+	
+	// if object has arrived at run time, when other objects are already acessing some resources\
+	   call init( true ) and set parameter to true
+	   
+	Instance->init( true );
+	
+ 
+*********************************************************
+
+
+******************** DEINIT ******************
+	int deinit();							
+
+DESCRIPTION:
+	
+	deinit() - deinitializes global maps. It takes no parameters. deinit() must be called before object 	exits, in order to properly deinitialize all maps previously initialized by init(). deinit() should be 	called only once at the end of lifecycle of the object, or when it has to terminate.
+	
+PRECONDITION:
+•	init() has been called;
+
+RETURN VALUES:
+
+	1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+	-5 - ERROR:		binary semaphore is not valid
+
+EXAMPLE CODE:
+
+	Instance->init();
+	...
+	//access resources concurrently
+	...
+	//if now is the end of life cycle of the object, or it has to terminate, deinit() should be called
+	
+	Instance->deinit();
+
+******************************************************
+	
+
+****************** MARK_RESOURCE ******************
+	int mark_resource(int res_id);	
+
+DESCRIPTION:
+
+	Function marks specified resource. After it is called, specified resource will be registered in 	object's specific table and will take part in synchronization. This function should be called for 	every resource object wants to use. If object does not use some resources for a long time, 	unmark_resources() should be called in order to improve performance of synchronization. 	Object can not access any shared resource before it calls this function. If function returns error 	code -7, it means that specified resource does not exist.
+
+PARAMETERS:
+
+	int res_id - id of resource you want to add to your access table in order to access it later
+	by calling acquire_resource().
+	
+PRECONDITION:
+	No precondition
+
+RETURN VALUES:
+
+	 1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+	-6 – ERROR:		bad resource ID
+
+	-7 - ERROR:		resource does not exist
+
+EXAMPLE CODE:
+
+	Instance->init( true );
+	...
+	int ret = Instance->mark_resource( 5 );
+	switch(ret)
+	{
+	case 1:
+	      //SUCCESS, do something
+	case -7:
+	      // resource does not exist, try other resource id
+	....
+	}
+
+*******************************************************
+	
+
+**************** UNMARK_RESOURCE ***************
+	int unmark_resource(int res_id);
+
+DESCRIPTION:
+	
+	Function unmarks resources that are not going to be used by object for some time, or at all. If 	object is at the end of its lifecycle or is about to terminate it should call this function for every 	resource it previously marked. This function should also be called if object is not going to use 	resources for some period of time. This period is not defined, and should be decided by the 	programmer. Its worth to knowl also that calling this function too often might also slow down 	execution. Programmer should find tradeoff, depending on the system that is being developed.
+
+	 As an example, if object makes access to resources every 5 seconds, it should not call this 	function after each access, i.e. after every 5 seconds. But if object makes access to resources 	every 15-20 seconds or so, it should better call this function after every access. Important to 	consider the fact that if there are not many objects in the system who are in concurrent 	execution, call to this function might be skipped. It would be not necessary to call it due to 	small number of concurrent objects.
+	
+	NOTE:If object is not accessing resources he marked before for long time and did not unmark, 	it will slow down performance of synchronization for other objects who currently take part in 	synchronization.
+
+PARAMETERS:
+
+	int res_id - id of resource you want to delete from your access table.
+	
+PRECONDITION:
+•	mark_resource() has been called;
+
+
+RETURN VALUES:
+
+	 1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+	-6 - ERROR:		bad resource ID
+
+	-7 - ERROR:		resource does not exist
+
+EXAMPLE CODE:
+
+	Instance->access_resources();
+	...
+	//if now object is not going to access resources for some reasonable amount of time, \	 	  	  unmark_resources() should be called
+	...
+	Instance->unmark_resource( 5 );
+
+***************************************************
+	
+
+************** REGISTER_RESOURCE **************
+	int register_resource( int res_id, std::map<int, int> );
+
+DESCRIPTION:
+
+	This function is used to register shared resource, whether it is global or local. All resources 	should be registered before objects start accessing them. Resources can be registered at startup 	or during runtime of application. This function ensures mutual exclusion. Global shared 	resources, that are not part of any class (not a maember), should be registered globally with this 	function called from any object, or explicitly (see example below).
+	
+	NOTE: there is no difference in registering local and global resource. For instance, Object2 can 	register resource that belongs to Object1, and vice versa. Also, one object can register all 	resources that are in the system. This is legal. Registration ob resources is not private, it is 	global and has global effect, therefore it can be done by any object or explicitly.
+
+
+PARAMETERS:
+
+	int res_id - unique id of a resource that is being registered
+
+	std::map<int, int> - map containing two integers, as key and value. It represents table
+	of users for this specific resource. Map with two integers should be created and passed
+	to this function empty, as a parameter.
+	
+PRECONDITION:
+	 No precondition
+
+RETURN VALUES:
+
+	 1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+	-6 - ERROR:		bad resource ID
+
+	-8 - ERROR:		resource already exists
+
+EXAMPLE CODE:
+
+	LOCAL RESOURCE REGISTRATION:
+
+		Instance->init();
+		...
+		std::map<int, int> table_of_users;	// table of users for shared resource
+	
+		Instance->register_resource( 4, table_of_users );	// lets assign id 4 to shared
+
+	GLOBAL RESOURCE REGISTRATION CASE 1:
+
+		int shared_resource = 200;	// global shared resource
+
+		Instance->init();
+		...
+		std::map<int, int> table_of_users_1;	// table of users for global shared resource
+
+		Instance->register_resource( 5, table_of_users_1 );	// assign id 5 to shared \											   resource
+
+	GLOBAL RESOURCE REGISTRATION CASE 2:
+
+		int shared_resource_2 = 30;	//global shared resource
+
+		std::map<int, int> table_of_users_2;		// table of users for this resource
+
+		pthread_mutex_lock( &g_mutex );			// take global mutex
+
+		mr_tables_of_users[ 6 ] = table_of_users_2;	// assign id 6 to this resource
+
+		mr_table_of_flags[ 6 ] = 3;	// make this resource FREE, i.e. assign 3 to its ID (it is 							   default)
+		
+		// FREE is an in class identifier, therefor it can not be used externally, but as it \				   corresponds to integer 3, then integer 3 can be used instead.
+
+		pthread_mutex_unlock( &g_mutex );		// relinquish global mutex
+		
+		//From now this resource can be referenced by ID 6;
+		
+		Instance->mark_resource( 6 );
+
+*************************************************
+	
+
+************ UNREGISTER_RESOURCE *************
+	int unregister_resource(int res_id );					
+
+DESCRIPTION:
+
+	Function unregisters previously registered shared resource. Unregistration of any shared 	resource should be done if resource is not needed any more and if no object is using it. If there 	is at least one object using resource, unregistration will return specific error code. If object that 	provides resource is about to terminate, it should call this function.
+
+PARAMETERS:
+
+	int res_id - unique id of a resource that is being unregistered
+	
+PRECONDITION:
+•	register_resource() has been called;
+
+RETURN VALUES:
+
+	 1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+	-6 - ERROR:		bad resource ID
+
+	-7 - ERROR:		resource does not exist
+
+	-9 - ERROR:		resource can not be unregistered
+
+EXAMPLE CODE:
+
+	LOCAL & GLOBAL RESOURCE UNREGISTRATION:
+	
+		Instance->unregister_resource( 6 );
+ 
+	GLOBAL RESOURCE UNREGISTRATION:
+
+		pthread_mutex_lock( &g_mutex );
+
+		mr_tables_of_users[ 6 ].clear();				// clear table of users
+		mr_tables_of_users.erase( mr_tables_of_users.find( 6 ) );	// erase table of users from 											   map
+		mr_table_of_flags.erase( mr_table_of_flags.find( 6 ) );	// erase resource from table of 										   flags
+
+		pthread_mutex_unlock( &g_mutex );
+
+**************************************************
+	
+
+************* ACQUIRE_RESOURCE *************
+	int acquire_resources();						
+
+DESCRIPTION:
+
+	Function contains algorithm for resource acquisition. It should be called just before resource is 	accessed, to ensure mutual exclusion.
+	
+PRECONDITION:
+•	mark_resource() has been called;
+
+POSTCONDITION:
+•	release_resources() must be called immediately after access to resources;
+
+RETURN VALUES:
+
+	 1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+	-10 – ERROR:		sem_post() failed
+
+	-11 - ERROR:		sem_wait() failed
+
+EXAMPLE CODE:
+
+	...
+	...
+	Instance->acquire_resources();
+
+	Instance->access_shared_resources();
+
+	Instance->release_resources();
+
+**********************************************
+	
+
+************* RELEASE_RESOURCE **************
+	int release_resources();					
+
+DESCRIPTION:
+
+	Function contains algorithm for relinquishing resources. It should be called right after access to 	shared resources has been done. There are no limitations on this function.
+	
+PRECONDITION:
+•	acquire_resources() has been called;
+
+RETURN VALUES:
+
+	 1  - SUCCESS:	function executed correctly
+
+	-1 - ERROR:		general mutex problem
+
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
+
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+
+
+EXAMPLE CODE:
+
+	...
+	...
+	Instance->acquire_resources();
+
+	Instance->access_shared_resources();
+
+	Instance->release_resources();
+
+************************************************
+
