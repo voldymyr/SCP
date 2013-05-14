@@ -1,5 +1,4 @@
 
-
 				Synchronization Control Protocol v1.0
 
 
@@ -64,8 +63,9 @@ of objects derived from Concurrent class.
 
 
 					PUBLIC INTERFACE
+
 	
-********************** INIT ***********************
+			********************** INIT ***********************
 	int init( bool bcount = false );
 
 DESCRIPTION:
@@ -85,24 +85,27 @@ and set parameter to true, in order to align it with other objects. Ignoring thi
 problems.
 	
 PRECONDITION:
-�	If called at run time: �true� should be passed as a parameter;
-�	If called at the beginning, when concurrent execution has not been started (default), nothing should be passed, or �false� - which is by default;
+1	If called at run time: "true" should be passed as a parameter;
+2	If called at the beginning, when concurrent execution has not been started (default), nothing
+	should be passed, or "false" - which is by default;
 
 RETURN VALUES:
 
-	 1 � SUCCESS:	function executed correctly
+	 1 - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
-	-2 � ERROR:		resulted from EINVAL - mutex has not been properly initialized
+	-2 - ERROR:		resulted from EINVAL - mutex has not been properly initialized
 
-	-3 � ERROR:		binary semaphore initialization error
+	-3 - ERROR:		binary semaphore initialization error
 
-	-4 � ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
 
 EXAMPLE CODE:
 
-	SomeClass *Instance = new SomeClass( g_mutex, g_event_table, g_access_table,\ 								 g_tables_of_users, g_count_table, g_table_of_flags,\ 							 g_missed_wakeups, g_resource_state, 1 );
+	SomeClass *Instance = new SomeClass( g_mutex, g_event_table, g_access_table,\ 
+	g_tables_of_users, g_count_table, g_table_of_flags, g_missed_wakeups,\
+	g_resource_state, 1 );
 						
 	// if object has just been created, call init() without setting parameter; default setting is set\
 	   to false already
@@ -118,22 +121,24 @@ EXAMPLE CODE:
 	Instance->init( true );
 	
  
-*********************************************************
+				*********************************************************
 
 
-******************** DEINIT ******************
+				************************** DEINIT *************************
 	int deinit();							
 
 DESCRIPTION:
 	
-	deinit() - deinitializes global maps. It takes no parameters. deinit() must be called before object 	exits, in order to properly deinitialize all maps previously initialized by init(). deinit() should be 	called only once at the end of lifecycle of the object, or when it has to terminate.
+	deinit() - deinitializes global maps. It takes no parameters. deinit() must be called before
+object exits, in order to properly deinitialize all maps previously initialized by init(). deinit()
+should be called only once at the end of lifecycle of the object, or when it has to terminate.
 	
 PRECONDITION:
-�	init() has been called;
+1	init() has been called;
 
 RETURN VALUES:
 
-	1  - SUCCESS:	function executed correctly
+	 1 - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -153,15 +158,20 @@ EXAMPLE CODE:
 	
 	Instance->deinit();
 
-******************************************************
+				******************************************************
 	
 
-****************** MARK_RESOURCE ******************
+				****************** MARK_RESOURCE ******************
 	int mark_resource(int res_id);	
 
 DESCRIPTION:
 
-	Function marks specified resource. After it is called, specified resource will be registered in 	object's specific table and will take part in synchronization. This function should be called for 	every resource object wants to use. If object does not use some resources for a long time, 	unmark_resources() should be called in order to improve performance of synchronization. 	Object can not access any shared resource before it calls this function. If function returns error 	code -7, it means that specified resource does not exist.
+	Function marks specified resource. After it is called, specified resource will be registered in
+object's specific table and will take part in synchronization. This function should be called for every 
+resource object wants to use. If object does not use some resources for a long time, unmark_resources()
+should be called in order to improve performance of synchronization. Object can not access any shared
+resource before it calls this function. If function returns error code -7, it means that specified 
+resource does not exist.
 
 PARAMETERS:
 
@@ -173,7 +183,7 @@ PRECONDITION:
 
 RETURN VALUES:
 
-	 1  - SUCCESS:	function executed correctly
+	 1 - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -181,7 +191,7 @@ RETURN VALUES:
 
 	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
 
-	-6 � ERROR:		bad resource ID
+	-6 - ERROR:		bad resource ID
 
 	-7 - ERROR:		resource does not exist
 
@@ -199,31 +209,40 @@ EXAMPLE CODE:
 	....
 	}
 
-*******************************************************
+			*******************************************************
 	
 
-**************** UNMARK_RESOURCE ***************
+			**************** UNMARK_RESOURCE ***************
 	int unmark_resource(int res_id);
 
 DESCRIPTION:
 	
-	Function unmarks resources that are not going to be used by object for some time, or at all. If 	object is at the end of its lifecycle or is about to terminate it should call this function for every 	resource it previously marked. This function should also be called if object is not going to use 	resources for some period of time. This period is not defined, and should be decided by the 	programmer. Its worth to knowl also that calling this function too often might also slow down 	execution. Programmer should find tradeoff, depending on the system that is being developed.
+	Function unmarks resources that are not going to be used by object for some time, or at all. If 
+object is at the end of its lifecycle or is about to terminate it should call this function for every 
+resource it previously marked. This function should also be called if object is not going to use resources
+for some period of time. This period is not defined, and should be decided by the programmer. Its worth to
+knowl also that calling this function too often might also slow down execution. Programmer should find
+tradeoff, depending on the system that is being developed.
 
-	 As an example, if object makes access to resources every 5 seconds, it should not call this 	function after each access, i.e. after every 5 seconds. But if object makes access to resources 	every 15-20 seconds or so, it should better call this function after every access. Important to 	consider the fact that if there are not many objects in the system who are in concurrent 	execution, call to this function might be skipped. It would be not necessary to call it due to 	small number of concurrent objects.
+As an example, if object makes access to resources every 5 seconds, it should not call this function after
+each access, i.e. after every 5 seconds. But if object makes access to resources every 15-20 seconds or so,
+it should better call this function after every access. Important to consider the fact that if there are
+not many objects in the system who are in concurrent execution, call to this function might be skipped.
+It would be not necessary to call it due to small number of concurrent objects.
 	
-	NOTE:If object is not accessing resources he marked before for long time and did not unmark, 	it will slow down performance of synchronization for other objects who currently take part in 	synchronization.
+	NOTE:If object is not accessing resources he marked before for long time and did not unmark, it will
+slow down performance of synchronization for other objects who currently take part in synchronization.
 
 PARAMETERS:
 
 	int res_id - id of resource you want to delete from your access table.
 	
 PRECONDITION:
-�	mark_resource() has been called;
-
+1	mark_resource() has been called;
 
 RETURN VALUES:
 
-	 1  - SUCCESS:	function executed correctly
+	 1  - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -239,21 +258,29 @@ EXAMPLE CODE:
 
 	Instance->access_resources();
 	...
-	//if now object is not going to access resources for some reasonable amount of time, \	 	  	  unmark_resources() should be called
+	//if now object is not going to access resources for some reasonable amount of time,\
+	unmark_resources() should be called
 	...
 	Instance->unmark_resource( 5 );
 
-***************************************************
+			***************************************************
 	
 
-************** REGISTER_RESOURCE **************
+			************** REGISTER_RESOURCE **************
 	int register_resource( int res_id, std::map<int, int> );
 
 DESCRIPTION:
 
-	This function is used to register shared resource, whether it is global or local. All resources 	should be registered before objects start accessing them. Resources can be registered at startup 	or during runtime of application. This function ensures mutual exclusion. Global shared 	resources, that are not part of any class (not a maember), should be registered globally with this 	function called from any object, or explicitly (see example below).
+	This function is used to register shared resource, whether it is global or local. All resources 
+should be registered before objects start accessing them. Resources can be registered at startup or during
+runtime of application. This function ensures mutual exclusion. Global shared resources, that are not
+part of any class (not a maember), should be registered globally with this function called from any object,
+or explicitly (see example below).
 	
-	NOTE: there is no difference in registering local and global resource. For instance, Object2 can 	register resource that belongs to Object1, and vice versa. Also, one object can register all 	resources that are in the system. This is legal. Registration ob resources is not private, it is 	global and has global effect, therefore it can be done by any object or explicitly.
+	NOTE: there is no difference in registering local and global resource. For instance, Object2 can 
+register resource that belongs to Object1, and vice versa. Also, one object can register all resources
+that are in the system. This is legal. Registration ob resources is not private, it is 	global and has 
+global effect, therefore it can be done by any object or explicitly.
 
 
 PARAMETERS:
@@ -269,7 +296,7 @@ PRECONDITION:
 
 RETURN VALUES:
 
-	 1  - SUCCESS:	function executed correctly
+	 1  - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -321,26 +348,29 @@ EXAMPLE CODE:
 		
 		Instance->mark_resource( 6 );
 
-*************************************************
+			*************************************************
 	
 
-************ UNREGISTER_RESOURCE *************
+			************ UNREGISTER_RESOURCE *************
 	int unregister_resource(int res_id );					
 
 DESCRIPTION:
 
-	Function unregisters previously registered shared resource. Unregistration of any shared 	resource should be done if resource is not needed any more and if no object is using it. If there 	is at least one object using resource, unregistration will return specific error code. If object that 	provides resource is about to terminate, it should call this function.
+	Function unregisters previously registered shared resource. Unregistration of any shared resource
+should be done if resource is not needed any more and if no object is using it. If there is at least one 
+object using resource, unregistration will return specific error code. If object that provides resource
+is about to terminate, it should call this function.
 
 PARAMETERS:
 
 	int res_id - unique id of a resource that is being unregistered
 	
 PRECONDITION:
-�	register_resource() has been called;
+1	register_resource() has been called;
 
 RETURN VALUES:
 
-	 1  - SUCCESS:	function executed correctly
+	 1  - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -370,25 +400,26 @@ EXAMPLE CODE:
 
 		pthread_mutex_unlock( &g_mutex );
 
-**************************************************
+			**************************************************
 	
 
-************* ACQUIRE_RESOURCE *************
+			************* ACQUIRE_RESOURCE *************
 	int acquire_resources();						
 
 DESCRIPTION:
 
-	Function contains algorithm for resource acquisition. It should be called just before resource is 	accessed, to ensure mutual exclusion.
+	Function contains algorithm for resource acquisition. It should be called just before resource is 
+accessed, to ensure mutual exclusion.
 	
 PRECONDITION:
-�	mark_resource() has been called;
+1	mark_resource() has been called;
 
 POSTCONDITION:
-�	release_resources() must be called immediately after access to resources;
+1	release_resources() must be called immediately after access to resources;
 
 RETURN VALUES:
 
-	 1  - SUCCESS:	function executed correctly
+	 1  - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -396,7 +427,7 @@ RETURN VALUES:
 
 	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
 
-	-10 � ERROR:		sem_post() failed
+	-10 - ERROR:		sem_post() failed
 
 	-11 - ERROR:		sem_wait() failed
 
@@ -410,22 +441,23 @@ EXAMPLE CODE:
 
 	Instance->release_resources();
 
-**********************************************
+			**********************************************
 	
 
-************* RELEASE_RESOURCE **************
+			************* RELEASE_RESOURCE **************
 	int release_resources();					
 
 DESCRIPTION:
 
-	Function contains algorithm for relinquishing resources. It should be called right after access to 	shared resources has been done. There are no limitations on this function.
+	Function contains algorithm for relinquishing resources. It should be called right after access to 
+shared resources has been done. There are no limitations on this function.
 	
 PRECONDITION:
-�	acquire_resources() has been called;
+1	acquire_resources() has been called;
 
 RETURN VALUES:
 
-	 1  - SUCCESS:	function executed correctly
+	 1  - SUCCESS:		function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
@@ -444,5 +476,5 @@ EXAMPLE CODE:
 
 	Instance->release_resources();
 
-************************************************
+			************************************************
 
