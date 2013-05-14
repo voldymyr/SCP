@@ -1,80 +1,66 @@
 
 
+				Synchronization Control Protocol v1.0
+
+
+				Programmers reference v1.0 for Linux
 
 
 
 
+			***************** GLOBAL DECLARATIONS ********************
+
+There are 8 global variables that are important for concurrent execution with Synchronization Control
+Protocol (SCP). They all must be defined before concurrent execution starts. These variables contain 
+information about objects and resources, which is needed by SCP.
 
 
+pthread_mutex_t g_mutex;	Global mutex used for synchronization. Should be initialized and passed
+to Concurrent's constructor.
 
+std::map<int, sem_t> g_event_table;	Global event table containing ObjectIDs as keys and binary
+semaphores as values. It is internally used for synchronization. It will be automatically initialized
+when init() function is called. It should be passed to Concurrent's constructor. This variable is 
+initially empty.
 
+std::map<int, std::vector<int> > g_access_table;	Global access table containing objectIDs as keys
+and vector of resource IDs that object accesses as values. This map can be initialized by calling
+mark_resource() function and deinitialized by calling unmark_resources(). This map is initially empty.
 
+std::map<int, std::map<int, int> > g_tables_of_users;	Global map containing tables of users.
+It contains resourceIDs as keys and as values it contains a map which has ObjectIDs as keys and 
+accessType as values. Access type can be one of the three object states decalred in Concurrent class. 
+If object provides its own member or members as shared resources, it must first register them by
+calling register_resource() function. Otherwise, if shared resources are global, this structure should 
+be initialized manually. Note that before manual initialization global semaphore must be acquired!!!
 
+std::map<int, int> g_count_table;	Global count table contains ObjectIDs as keys and count
+variables as values. This table contains number of accesses to different shared resources by each
+object. This map will be initialized by calling init() function. Initialization wil be dependent on the
+parameter to init() function.
 
+std::map<int, int> g_table_of_flags;		Global table of flags containing resourceIDs as keys and
+flags as values. Flag can be one of two values declared in Concurrent class: FREE and BUSY. Flags signal
+current state of resource.This map is empty initially. It will be initialized by calling init() function.
 
+std::map<int, int> g_missed_wakeups;	Global map containing number of missed wake ups for each object.
+It contains objectIDs as keys and integer variable as value, which signals the number of missed wake ups.
+This variable is empty initially. It will be initialized by calling init() function.
 
-
-
-Synchronization Control
-Protocol v1.0
-
-
-
-Programmers reference v1.0
-for Linux
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-***************** GLOBAL DECLARATIONS ********************
-
-	There are 8 global variables that are important for concurrent execution with Synchronization Control Protocol (SCP). They all must be defined before concurrent execution starts. These variables contain information about objects and resources, which is needed by SCP.
-
-
-pthread_mutex_t g_mutex;		Global mutex used for synchronization. Should be initialized and passed to Concurrent's constructor.
-std::map<int, sem_t> g_event_table;	Global event table containing ObjectIDs as keys and binary semaphores as values. It is internally used for synchronization. It will be automatically initialized when init() function is called. It should be passed to Concurrent's constructor. This variable is initially empty.
-std::map<int, std::vector<int> > g_access_table;	Global access table containing objectIDs as keys and vector of resource IDs that object accesses as values. This map can be initialized by calling mark_resource() function and deinitialized by calling unmark_resources(). This map is initially empty.
-std::map<int, std::map<int, int> > g_tables_of_users;	Global map containing tables of users. It contains resourceIDs as keys and as values it contains a map which has ObjectIDs as keys and accessType as values. Access type can be one of the three object states decalred in Concurrent class. If object provides its own member or members as shared resources, it must first register them by calling register_resource() function. Otherwise, if shared resources are global, this structure should be initialized manually. Note that
-before manual initialization global semaphore must be acquired!!!
-std::map<int, int> g_count_table;	Global count table contains ObjectIDs as keys and count variables as values. This table contains number of accesses to different shared resources by each
-object. This map will be initialized by calling init() function. Initialization wil be dependent on the parameter to init() function.
-std::map<int, int> g_table_of_flags;		Global table of flags containing resourceIDs as keys and flags as values. Flag can be one of two values declared in Concurrent class: FREE and BUSY. Flags signal current state of resource.This map is empty initially. It will be initialized by calling init() function.
-std::map<int, int> g_missed_wakeups;	Global map containing number of missed wake ups for each object. It contains objectIDs as keys and integer variable as value, which signals the number of
-missed wake ups. This variable is empty initially. It will be initialized by calling init() function.
-std::map<int, int> g_resource_state;		Shows if resource is marked by some objects, and by how many (key: resource id; value: number of objects that marked resource). This map is used internally for
+std::map<int, int> g_resource_state;		Shows if resource is marked by some objects, and by how
+many (key: resource id; value: number of objects that marked resource). This map is used internally for
 synchronization purposes.
 
 
+	
+						SUMMARY
+	To summarize general knowledge about global shared tables (maps) it is important to remind that
+all variables should be created before execution starts and passed empty to the constructors of objects
+derived from Concurrent class. Names of all global maps can be defined by users, they do not necessarily
+need to be named as described above. The most important thing is that they must be passed to constructor
+of objects derived from Concurrent class.
 
-SUMMARY
-	To summarize general knowledge about global shared tables (maps) it is important to remind that all variables should be created before execution starts and passed empty to the constructors of objects derived from Concurrent class. Names of all global maps can be defined by users, they do not necessarily need to be named as described above. The most important thing is that they must be passed to constructor of objects derived from Concurrent class.
-
-**************************************************
+			**************************************************
 
 
 					PUBLIC INTERFACE
@@ -84,27 +70,35 @@ SUMMARY
 
 DESCRIPTION:
 
-	This function initializes some global structures, such as creates binary semaphore for object that 	calls it, for instance. Function takes one boolean parameter: bcount. It will indicate whether 	object cals init() before concurrent execution, or at a run time. Initialization of global structures 	is done through references to global maps that reside in Concurrent class. init() must be called 	for every object before it starts concurrent execution, i.e. starts accessing shared resources. If 	new object comes at runtime, it can safely call init() and start its work. Function should be 	called only once for each object.
+	This function initializes some global structures, such as creates binary semaphore for object that
+calls it, for instance. Function takes one boolean parameter: bcount. It will indicate whether 	object
+cals init() before concurrent execution, or at a run time. Initialization of global structures 	is done
+through references to global maps that reside in Concurrent class. init() must be called for every object
+before it starts concurrent execution, i.e. starts accessing shared resources. If new object comes at
+runtime, it can safely call init() and start its work. Function should be called only once for each object.
 	
 PARAMETERS:
 	
-	bool bcount - boolean variable initialized to false by default. It means object is created before 	concurrent execution has started, on the beginning. If object comes at runtime, it must call 	init( true ) and set parameter to true, in order to align it with other objects. Ignoring this might 	cause starvation problems.
+	bool bcount - boolean variable initialized to false by default. It means object is created before 
+concurrent execution has started, on the beginning. If object comes at runtime, it must call init( true )
+and set parameter to true, in order to align it with other objects. Ignoring this might cause starvation
+problems.
 	
 PRECONDITION:
-•	If called at run time: “true” should be passed as a parameter;
-•	If called at the beginning, when concurrent execution has not been started (default), nothing should be passed, or “false” - which is by default;
+ï¿½	If called at run time: ï¿½trueï¿½ should be passed as a parameter;
+ï¿½	If called at the beginning, when concurrent execution has not been started (default), nothing should be passed, or ï¿½falseï¿½ - which is by default;
 
 RETURN VALUES:
 
-	 1 – SUCCESS:	function executed correctly
+	 1 ï¿½ SUCCESS:	function executed correctly
 
 	-1 - ERROR:		general mutex problem
 
-	-2 – ERROR:		resulted from EINVAL - mutex has not been properly initialized
+	-2 ï¿½ ERROR:		resulted from EINVAL - mutex has not been properly initialized
 
-	-3 – ERROR:		binary semaphore initialization error
+	-3 ï¿½ ERROR:		binary semaphore initialization error
 
-	-4 – ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
+	-4 ï¿½ ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
 
 EXAMPLE CODE:
 
@@ -135,7 +129,7 @@ DESCRIPTION:
 	deinit() - deinitializes global maps. It takes no parameters. deinit() must be called before object 	exits, in order to properly deinitialize all maps previously initialized by init(). deinit() should be 	called only once at the end of lifecycle of the object, or when it has to terminate.
 	
 PRECONDITION:
-•	init() has been called;
+ï¿½	init() has been called;
 
 RETURN VALUES:
 
@@ -187,7 +181,7 @@ RETURN VALUES:
 
 	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
 
-	-6 – ERROR:		bad resource ID
+	-6 ï¿½ ERROR:		bad resource ID
 
 	-7 - ERROR:		resource does not exist
 
@@ -224,7 +218,7 @@ PARAMETERS:
 	int res_id - id of resource you want to delete from your access table.
 	
 PRECONDITION:
-•	mark_resource() has been called;
+ï¿½	mark_resource() has been called;
 
 
 RETURN VALUES:
@@ -342,7 +336,7 @@ PARAMETERS:
 	int res_id - unique id of a resource that is being unregistered
 	
 PRECONDITION:
-•	register_resource() has been called;
+ï¿½	register_resource() has been called;
 
 RETURN VALUES:
 
@@ -387,10 +381,10 @@ DESCRIPTION:
 	Function contains algorithm for resource acquisition. It should be called just before resource is 	accessed, to ensure mutual exclusion.
 	
 PRECONDITION:
-•	mark_resource() has been called;
+ï¿½	mark_resource() has been called;
 
 POSTCONDITION:
-•	release_resources() must be called immediately after access to resources;
+ï¿½	release_resources() must be called immediately after access to resources;
 
 RETURN VALUES:
 
@@ -402,7 +396,7 @@ RETURN VALUES:
 
 	-4 - ERROR:		resulted from EDEADLK - mutex is already owned by the calling thread
 
-	-10 – ERROR:		sem_post() failed
+	-10 ï¿½ ERROR:		sem_post() failed
 
 	-11 - ERROR:		sem_wait() failed
 
@@ -427,7 +421,7 @@ DESCRIPTION:
 	Function contains algorithm for relinquishing resources. It should be called right after access to 	shared resources has been done. There are no limitations on this function.
 	
 PRECONDITION:
-•	acquire_resources() has been called;
+ï¿½	acquire_resources() has been called;
 
 RETURN VALUES:
 
