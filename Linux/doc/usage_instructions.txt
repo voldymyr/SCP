@@ -1,4 +1,3 @@
-
 ***   Synchronization Control Protocol. Copyright (C) 2013 Volodymyr Bendiuga   ***
 
 			Contact e-mail: vova.bendiuga@gmail.com
@@ -12,16 +11,17 @@
 5.  Call initialization function from each object.
 6.  Register resources calling register_resource(): global or local resources.
 7.  Mark resources calling mark_resources(): these are the resources object will access durin execution of the program.
-8.  Compile and run you application. All objects should now access resources they want.
+8.  Call acquire_resources() and release_resources() whenever you want to access resources or free them.
+9.  Compile and run you application. All objects should now access resources they want.
 
-9a. To compile application with g++ on Linux you must include path to /include directory where scp.h is and include path
+10a. To compile application with g++ on Linux you must include path to /include directory where scp.h is and include path
     to /lib directory where concurrent.so resides and pass -lconcurrent as a parameter to g++. 
    
 	For example:
    
 	g++ -Wall -I/path/to/includes -L/path/to/libraries your_prog.cpp -lConcurrent -o your_prog_exec
 
-9b. If you have copied header file scp.h to system's /include directory and concurrent.so to system's /lib directory,
+10b. If you have copied header file scp.h to system's /include directory and concurrent.so to system's /lib directory,
     then you don't need to pass include and lib directories to compiler.
 
 	For example:
