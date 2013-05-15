@@ -1,28 +1,31 @@
-                               
-Installation steps:
+***   Synchronization Control Protocol. Copyright (C) 2013 Volodymyr Bendiuga   ***
+
+			Contact e-mail: vova.bendiuga@gmail.com
+			
+	Usage instructions:
 
 1.  Include header file "scp.h" in your project.
 2.  Derive any relevant class in your spplication from "Concurrent" class.
-3a. Create Shared Declarations: these are global variables discussed in programmers reference. 
-3b. Create instances of your classes and pass shared declarations as parameters to constructors.
-4.  Call initialization function from each object.
-5.  Register resources calling register_resource(): global or local resources.
-6.  Mark resources calling mark_resources(): these are the resources object will access durin execution of the program.
-7.  Compile and run you application. All objects should now access resources they want.
+3.  Create Shared Declarations: these are global variables discussed in programmers reference. 
+4.  Create instances of your classes and pass shared declarations as parameters to constructors.
+5.  Call initialization function from each object.
+6.  Register resources calling register_resource(): global or local resources.
+7.  Mark resources calling mark_resources(): these are the resources object will access durin execution of the program.
+8.  Call acquire_resources() and release_resources() whenever you want to access resources or free them.
+9.  Compile and run you application. All objects should now access resources they want.
 
-8a.To compile application with g++ on Linux you must include path to /include directory where scp.h is and include path
-   to /lib directory where concurrent.so resides and pass -lconcurrent as a parameter to g++. 
+10a. To compile application with g++ on Linux you must include path to /include directory where scp.h is and include path
+    to /lib directory where concurrent.so resides and pass -lconcurrent as a parameter to g++. 
    
 	For example:
    
 	g++ -Wall -I/path/to/includes -L/path/to/libraries your_prog.cpp -lConcurrent -o your_prog_exec
 
-8b. If you have copied header file scp.h to system's /include directory and concurrent.so to system's /lib directory, then
-    you don't need to pass include and lib directories to compiler.
+10b. If you have copied header file scp.h to system's /include directory and concurrent.so to system's /lib directory,
+    then you don't need to pass include and lib directories to compiler.
 
 	For example:
 
 	g++ -Wall your_prog.cpp -lConcurrent -o your_prog_exec
    
-  
-******************************************************************************************************************************
+ 
