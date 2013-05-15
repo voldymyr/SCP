@@ -1,4 +1,8 @@
-  
+
+***   Synchronization Control Protocol. Copyright (C) 2013 Volodymyr Bendiuga   ***
+
+			Contact e-mail: vova.bendiuga@gmail.com
+			
 	Usage instructions:
 
 1.  Include header file "scp.h" in your project.
