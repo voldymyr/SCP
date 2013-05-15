@@ -1,8 +1,13 @@
+				
+***   Synchronization Control Protocol. Copyright (C) 2013 Volodymyr Bendiuga   ***
+
+			Contact e-mail: vova.bendiuga@gmail.com
+			
+			
 				Synchronization Control Protocol v1.0
 
 
 				Programmers reference v1.0 for Linux
-
 
 
 
